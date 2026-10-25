@@ -1,0 +1,73 @@
+/*
+ * Custom hover cards (TASK-022, Section 6.3). One shared card, rendered
+ * outside the timeline scroller so the scroller's overflow can never
+ * clip it. Hidden/show state is driven by data-visible; placement by
+ * data-placement (set by HoverCard.ts).
+ */
+
+.hover-card {
+  position: fixed;
+  /* Above the page, below the viewer dialogs. */
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  max-width: 18rem;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-raised);
+  opacity: 0;
+  /* Always inert: the card is purely informational, so it never
+     intercepts wheel, drag, or click events aimed at the timeline
+     (Section 6.3: the card must not obstruct essential controls).
+     If the card ever gains interactive parts, revisit this. */
+  pointer-events: none;
+}
+
+.hover-card[data-visible="true"] {
+  opacity: 1;
+}
+
+.hover-card__image {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.hover-card__date {
+  margin: 0;
+  font-size: var(--text-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.hover-card__description {
+  margin: 0;
+  font-size: var(--text-size-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-ink);
+  overflow-wrap: break-word;
+}
+
+/* Subtle entrance, only when motion is welcome (tokens.css convention;
+   base.css's global reduced-motion guard is the second line of defense). */
+@media (prefers-reduced-motion: no-preference) {
+  .hover-card {
+    transform: translateY(var(--space-1));
+    transition:
+      opacity var(--transition-fast) var(--ease-out),
+      transform var(--transition-fast) var(--ease-out);
+  }
+
+  .hover-card[data-visible="true"] {
+    transform: translateY(0);
+  }
+}

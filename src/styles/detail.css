@@ -1,0 +1,105 @@
+/*
+ * Detail-mode layout (TASK-025). <body data-mode> mirrors the view
+ * state (navigation.ts); anything other than "overview" is a detail
+ * composition: the intro recedes (intro.css + document scroll) and the
+ * timeline pins to the lower viewport region so it remains rendered,
+ * visible, and usable while detail content is open (Section 6.4).
+ * Mobile adaptations are TASK-033.
+ */
+
+/* Guarantee the document can scroll far enough that the intro exits
+   the viewport even while the mosaic is short (it grows with content
+   once TASK-027 renders it). */
+body:not([data-mode="overview"]) main {
+  flex: 1 0 auto;
+  min-height: 70vh;
+}
+
+/* The timeline stays present and readable for the entire detail state:
+   pinned to the lower viewport so tall galleries scroll beneath it.
+   Opaque background keeps scrolled content from showing through.
+   z-index sits below the hover card (10) and the skip link (100). */
+body:not([data-mode="overview"]) #timeline-region {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: var(--color-bg);
+}
+
+/*
+ * Detail header (TASK-026): the active date on the left, the close
+ * control on the right (Sections 6.4 and 6.8).
+ */
+.project-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-8) var(--space-6);
+}
+
+#project-date {
+  font-size: var(--text-size-xl);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+/* Icon-only close button: the accessible name comes from the
+   template's aria-label; the glyph is decorative (Section 7). */
+#close-project {
+  display: grid;
+  place-items: center;
+  width: 2.75rem; /* 44px — touch-target size (Section 7) */
+  height: 2.75rem;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast) var(--ease-out),
+    color var(--transition-fast) var(--ease-out);
+}
+
+#close-project::before {
+  content: "×";
+  font-family: var(--font-display);
+  font-size: var(--text-size-xl);
+  line-height: 1;
+}
+
+#close-project:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+/*
+ * Mobile detail (TASK-033, Sections 6.4 and 6.9): the desktop pin
+ * cannot work for the vertical timeline — it is taller than the
+ * viewport, so pinning its bottom covers the whole composition
+ * (found during TASK-032's verification). On mobile the timeline
+ * therefore sits in flow below the gallery, still present and usable,
+ * while the detail header becomes the sticky region: the selected date
+ * and the close control stay visible and reachable as the gallery
+ * scrolls. `svh` is layered over `vh` so the dynamic mobile toolbars
+ * do not make the min-height jump as they collapse.
+ */
+@media (max-width: 639.98px) {
+  body:not([data-mode="overview"]) main {
+    min-height: 70vh;
+    min-height: 70svh;
+  }
+
+  body:not([data-mode="overview"]) #timeline-region {
+    position: static;
+    background: none;
+  }
+
+  .project-detail__header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--color-bg);
+    padding-block: var(--space-4);
+  }
+}

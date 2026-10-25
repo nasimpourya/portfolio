@@ -1,0 +1,147 @@
+/*
+ * Overlays (TASK-029, Sections 6.6–6.7): the image viewer is a modal
+ * <dialog> element driven by the state model. showModal makes the
+ * background inert (no clicks, no focus); the scroll lock below also
+ * stops wheel/scrollbar page movement. (The text viewer was removed in
+ * TASK-041 — text content renders on the gallery cards.)
+ */
+
+/* One modal open at a time by construction (the state model), so a
+   :has() lock cannot double-apply (coordination is TASK-031). */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+dialog.viewer {
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-overlay);
+}
+
+dialog.viewer::backdrop {
+  background: rgb(26 24 23 / 0.45); /* --color-ink at 45% */
+}
+
+/* Shared icon-only close control (same idiom as #close-project). */
+.viewer__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: grid;
+  place-items: center;
+  width: 2.75rem; /* 44px — touch-target size (Section 7) */
+  height: 2.75rem;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast) var(--ease-out),
+    color var(--transition-fast) var(--ease-out);
+}
+
+.viewer__close::before {
+  content: "×";
+  font-family: var(--font-display);
+  font-size: var(--text-size-xl);
+  line-height: 1;
+}
+
+.viewer__close:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+/* --- Image viewer (TASK-029) --- */
+
+#image-viewer {
+  width: min(90vw, 1200px);
+  max-width: none;
+  background: transparent; /* the image floats over the dimmed backdrop */
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+#image-viewer-img {
+  display: block;
+  /* Largest reasonable size, aspect ratio preserved (Section 6.6). */
+  max-width: calc(100vw - var(--page-gutter) * 2);
+  max-height: 85vh;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-overlay);
+}
+
+/* Load-failure fallback: a labeled panel instead of a broken image. */
+.image-viewer--failed #image-viewer-img {
+  display: none;
+}
+
+.image-viewer--failed::after {
+  content: "Image unavailable — it may have failed to load.";
+  display: grid;
+  place-items: center;
+  min-height: 12rem;
+  padding: var(--space-8);
+  border: var(--border-width) dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-size-sm);
+}
+
+.viewer__nav {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.viewer__nav button {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-surface);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast) var(--ease-out),
+    color var(--transition-fast) var(--ease-out);
+}
+
+.viewer__nav button::before {
+  font-family: var(--font-display);
+  font-size: var(--text-size-xl);
+  line-height: 1;
+}
+
+#image-prev::before {
+  content: "‹";
+}
+
+#image-next::before {
+  content: "›";
+}
+
+.viewer__nav button:hover:not(:disabled) {
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.viewer__nav button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+

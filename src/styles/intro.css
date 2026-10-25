@@ -1,0 +1,81 @@
+/*
+ * Introduction composition (TASK-017): editorial photo + text block
+ * with generous whitespace. The photo anchors the left column on
+ * desktop; text stacks beneath on mobile.
+ */
+
+#intro {
+  padding-block: var(--space-16) var(--space-12);
+}
+
+.intro__figure {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin: 0;
+}
+
+#intro-photo {
+  width: clamp(8rem, 18vw, 12rem);
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--color-border);
+  box-shadow: var(--shadow-subtle);
+  flex-shrink: 0;
+}
+
+.intro__text {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 36rem;
+}
+
+#intro-name {
+  font-size: var(--text-size-2xl);
+  letter-spacing: var(--letter-spacing-wide);
+}
+
+#intro-headline {
+  color: var(--color-ink-muted);
+  font-size: var(--text-size-lg);
+}
+
+#intro-intro {
+  color: var(--color-ink);
+  max-width: 32rem;
+}
+
+/*
+ * Detail state (TASK-025): the intro recedes toward the top — the
+ * document scrolls its box almost fully out of the viewport (navigation
+ * service), leaving only the bottom tenth peeking (Section 1), while
+ * the intro itself fades to a quiet ghost. Full disappearance is
+ * TASK-026's close-control counterpart: detail.css + this fade return
+ * together with the overview.
+ */
+#intro[data-hidden="true"] {
+  opacity: 0.35;
+  transform: translateY(calc(-1 * var(--space-3)));
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #intro {
+    transition:
+      opacity var(--transition-slow) var(--ease-inout),
+      transform var(--transition-slow) var(--ease-inout);
+  }
+}
+
+@media (max-width: 639px) {
+  .intro__figure {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-6);
+  }
+
+  #intro {
+    padding-block: var(--space-8) var(--space-8);
+  }
+}

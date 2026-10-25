@@ -1,0 +1,7 @@
+{
+  "name": "Fixture Name",
+  "headline": "Fixture headline for integration tests.",
+  "intro": "Fixture introduction text.",
+  "image": "assets/profile.webp",
+  "imageAlt": "Fixture portrait"
+}

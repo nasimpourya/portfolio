@@ -1,0 +1,9 @@
+# Generated output — rebuilt by `npm run build`, deployed via GitHub Actions
+dist/
+
+# Originals archived by the build's JPEG/PNG → WebP conversion
+# (local archive only; the manifest never deploys them)
+original-images/
+
+# Dependencies
+node_modules/

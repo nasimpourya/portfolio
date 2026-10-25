@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="{{PAGE_DESCRIPTION}}" />
+  <title>{{PAGE_TITLE}}</title>
+  <!--
+    Build tokens (replaced by scripts/build.mjs, TASK-012):
+      {{PAGE_TITLE}}       page title, from profile name
+      {{PAGE_DESCRIPTION}} meta description
+      {{BASE_PATH}}        deployment base path, "" or "/repo" (Section 5.4)
+      {{APP_DATA_JSON}}    safe-serialized { manifest, profile }
+      {{INLINE_CSS}}       bundled stylesheet
+      {{INLINE_JS}}        bundled application code
+    The <base> element resolves all site-relative asset URLs in the
+    manifest correctly under both root and repository-subpath deployments.
+    This template contains no hardcoded project data.
+  -->
+  <base href="{{BASE_PATH}}/" />
+  <style>
+    {{INLINE_CSS}}
+  </style>
+</head>
+<body data-mode="overview">
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <!-- Introduction: profile photo and text (TASK-017 fills content from
+       the embedded profile; state transitions animate this region). -->
+  <header id="intro" data-state-region="intro">
+    <figure class="intro__figure">
+      <img id="intro-photo" alt="" />
+      <figcaption class="intro__text">
+        <h1 id="intro-name"></h1>
+        <p id="intro-headline"></p>
+        <p id="intro-intro"></p>
+      </figcaption>
+    </figure>
+  </header>
+
+  <!-- Project detail: header, mosaic, close control. Populated when a
+       project is active (TASK-024+). -->
+  <!-- tabindex="-1" lets the skip link's fragment navigation move focus
+       here (Section 7: logical focus destinations). -->
+  <main id="main-content" tabindex="-1" data-state-region="main">
+    <section id="project-detail" hidden aria-labelledby="project-date">
+      <div class="project-detail__header">
+        <h2 id="project-date" tabindex="-1"></h2>
+        <button id="close-project" type="button" aria-label="Close project and return to timeline"></button>
+      </div>
+      <div id="mosaic" class="mosaic" aria-label="Project gallery"></div>
+    </section>
+
+    <!-- Designed empty state when no eligible projects exist (Section 6.1). -->
+    <p id="empty-state" hidden>No projects yet — check back soon.</p>
+  </main>
+
+  <!-- Timeline navigation: horizontal on desktop, vertical on mobile.
+       Markers are rendered by Timeline.ts (TASK-018). The scroller is
+       the scroll container; the list is content-width so decorations
+       (the line) can span the full scrolled content. -->
+  <nav id="timeline-region" data-state-region="timeline" aria-label="Projects timeline">
+    <div class="timeline-scroller">
+      <ol id="timeline" class="timeline"></ol>
+    </div>
+  </nav>
+
+  <!-- Overlay: the large image viewer (TASK-029). Text content renders
+       on the gallery cards (TASK-041), so there is no text viewer. -->
+  <dialog id="image-viewer" class="viewer image-viewer" aria-label="Image viewer">
+    <button class="viewer__close" type="button" aria-label="Close image viewer"></button>
+    <img id="image-viewer-img" alt="" />
+    <nav class="viewer__nav" aria-label="Image navigation">
+      <button id="image-prev" type="button" aria-label="Previous image"></button>
+      <button id="image-next" type="button" aria-label="Next image"></button>
+    </nav>
+  </dialog>
+
+  <!-- Application data, embedded safely by the build (manifest +
+       profile). Read via JSON.parse of #app-data's textContent. -->
+  <script id="app-data" type="application/json">{{APP_DATA_JSON}}</script>
+  <script>
+    {{INLINE_JS}}
+  </script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+/*
+ * Gallery (TASK-027 tiles, TASK-028 mosaic composition, TASK-041 text
+ * content on cards).
+ *
+ * The mosaic is a 6-column grid with a deterministic size cycle — the
+ * same project always renders the same editorial arrangement, never
+ * per-render randomness (Section 6.5). Image frames use fixed
+ * aspect-ratio boxes with object-fit: cover so tile heights never
+ * depend on image load timing (no layout shift, Section 8.4); text
+ * cards use min-height floors and capped, internally scrollable bodies
+ * for the same reason.
+ */
+
+.mosaic {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-auto-flow: dense; /* fill gaps left by mixed spans */
+  gap: var(--space-4);
+  align-items: start;
+  padding-block: var(--space-6);
+}
+
+/* Size cycle (ProjectGallery.ts): large/small/medium/medium/full for
+   images, wide/narrow for text. Spans are multiples of 2 so simple
+   patterns tile the row cleanly; dense flow absorbs the rest. */
+.mosaic__tile--full {
+  grid-column: 1 / -1;
+}
+.mosaic__tile--large,
+.mosaic__tile--wide {
+  grid-column: span 4;
+}
+.mosaic__tile--medium {
+  grid-column: span 3;
+}
+.mosaic__tile--small,
+.mosaic__tile--narrow {
+  grid-column: span 2;
+}
+
+.mosaic__tile {
+  margin: 0; /* reset the figure element */
+  min-width: 0; /* grid items may not shrink below content otherwise */
+}
+
+.mosaic__frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color var(--transition-fast) var(--ease-out),
+    box-shadow var(--transition-fast) var(--ease-out);
+}
+
+.mosaic__frame:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-subtle);
+}
+
+/* Fixed tile proportions by size class — defined before images load. */
+.mosaic__tile--full .mosaic__frame {
+  aspect-ratio: 21 / 9;
+}
+.mosaic__tile--large .mosaic__frame {
+  aspect-ratio: 16 / 10;
+}
+.mosaic__tile--medium .mosaic__frame {
+  aspect-ratio: 4 / 3;
+}
+.mosaic__tile--small .mosaic__frame {
+  aspect-ratio: 1 / 1;
+}
+
+.mosaic__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A caption hosts the paired text's content (TASK-041); its own
+   typography is nothing — content and state text style themselves. */
+.mosaic__caption {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-top: none; /* continues the image frame beneath it */
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  overflow-wrap: anywhere; /* long words never overflow (Section 6.5) */
+}
+
+/* A captioned frame squares its bottom corners: the caption continues
+   the frame's sides and itself carries the combined unit's bottom
+   rounding — no notched seam where the two meet. */
+.mosaic__tile--image:has(.mosaic__caption) .mosaic__frame {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* A failed caption degrades to a dashed frame, like failed image tiles. */
+.mosaic__caption--failed {
+  border-style: dashed;
+}
+
+.mosaic__tile--image-failed .mosaic__frame {
+  border-style: dashed;
+}
+
+.mosaic__fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-size-xs);
+  color: var(--color-ink-faint);
+  text-align: center;
+}
+
+/*
+ * Text cards (TASK-041): the content renders on the card, so it is a
+ * reading surface, not a control — solid frame, no pointer affordances.
+ * Min-height floors keep the loading state from collapsing the grid.
+ */
+.mosaic__tile--text {
+  display: block;
+  min-height: 9rem;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+}
+
+/* Card body: capped and internally scrollable so one long document
+   cannot stretch the whole mosaic row (caption hosts cap tighter). */
+.mosaic__text {
+  max-height: 28rem;
+  overflow-y: auto;
+  padding: var(--space-4);
+  /* Explicit body font/ink so the host's rendering never depends on
+     what its container (e.g. a figcaption) styles. */
+  font-family: var(--font-body);
+  font-size: var(--text-size-sm);
+  line-height: var(--line-height-body);
+  color: var(--color-ink);
+}
+
+.mosaic__caption .mosaic__text {
+  max-height: 16rem;
+  padding: 0; /* the figcaption already carries the label padding */
+}
+
+/* Plain (.txt) content differs from markdown only in whitespace
+   handling — the body font is shared (no mono on text cards; mono
+   remains for code spans and fences below). */
+.mosaic__text--plain {
+  white-space: pre-wrap; /* meaningful whitespace and line breaks */
+  overflow-wrap: anywhere;
+}
+
+/* Loading and failure states: quiet and muted. */
+.mosaic__text--loading,
+.mosaic__text--failed {
+  font-style: italic;
+  color: var(--color-ink-faint);
+}
+
+/*
+ * Markdown content, scoped under .mosaic__text: base.css resets
+ * heading and paragraph margins for the application shell, so the
+ * rendered document re-establishes its own document rhythm here.
+ */
+.mosaic__text h1,
+.mosaic__text h2,
+.mosaic__text h3,
+.mosaic__text h4,
+.mosaic__text h5,
+.mosaic__text h6 {
+  margin: var(--space-4) 0 var(--space-2);
+  font-family: var(--font-display);
+  line-height: var(--line-height-tight);
+}
+
+.mosaic__text h1 {
+  font-size: var(--text-size-xl);
+}
+
+.mosaic__text h2 {
+  font-size: var(--text-size-lg);
+}
+
+.mosaic__text h3,
+.mosaic__text h4 {
+  font-size: var(--text-size-md);
+}
+
+.mosaic__text h5,
+.mosaic__text h6 {
+  font-size: var(--text-size-sm);
+}
+
+.mosaic__text > :first-child {
+  margin-top: 0;
+}
+
+.mosaic__text p {
+  margin: 0 0 var(--space-3);
+}
+
+.mosaic__text p:last-child,
+.mosaic__text pre:last-child,
+.mosaic__text blockquote:last-child {
+  margin-bottom: 0;
+}
+
+.mosaic__text ul,
+.mosaic__text ol {
+  margin: 0 0 var(--space-3);
+  padding-inline-start: var(--space-6);
+}
+
+.mosaic__text li {
+  margin-block: var(--space-1);
+}
+
+.mosaic__text blockquote {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-inline-start: 2px solid var(--color-border-strong);
+  color: var(--color-ink-muted);
+}
+
+.mosaic__text pre {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow-x: auto; /* code lines scroll, never widen the card */
+}
+
+.mosaic__text code {
+  font-family: var(--font-mono);
+  font-size: var(--text-size-xs);
+}
+
+.mosaic__text hr {
+  margin: var(--space-4) 0;
+  border: none;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+/* No base link style exists, so scoped links declare their own. */
+.mosaic__text a {
+  color: var(--color-ink);
+}
+
+/*
+ * Tablet (640–1023px): two columns; large, medium, wide, and full
+ * tiles take the whole row, small and narrow tiles pair up.
+ */
+@media (max-width: 1023px) {
+  .mosaic {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .mosaic__tile--full,
+  .mosaic__tile--large,
+  .mosaic__tile--medium,
+  .mosaic__tile--wide {
+    grid-column: 1 / -1;
+  }
+  .mosaic__tile--small,
+  .mosaic__tile--narrow {
+    grid-column: span 1;
+  }
+}
+
+/* Mobile (<640px): a single editorial column, no implicit overflow. */
+@media (max-width: 639px) {
+  .mosaic {
+    grid-template-columns: 1fr;
+  }
+  .mosaic__tile {
+    grid-column: 1 / -1;
+  }
+  .mosaic__tile--text {
+    min-height: 6rem;
+  }
+}

@@ -1,0 +1,114 @@
+/*
+ * Base styles (TASK-016 completes the full layout). Consumes the token
+ * set from tokens.css. The build concatenates stylesheets in sorted
+ * order; token definitions are :root custom properties, so sort order
+ * does not affect them.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Baseline loading treatment: the page renders as designed before any
+   JavaScript runs. */
+html {
+  background: var(--color-bg);
+}
+
+/* Page shell: centered editorial column with responsive gutters.
+   width: 100% is required because these are flex-column children —
+   auto margins alone would shrink them to content width, which breaks
+   any content wider than the viewport (e.g. the scrolling timeline). */
+.page-shell,
+main,
+header,
+nav {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-size-md);
+  line-height: var(--line-height-body);
+  -webkit-font-smoothing: antialiased;
+  /* Nothing may introduce horizontal page overflow (Section 7). */
+  overflow-x: hidden;
+}
+
+main {
+  width: 100%;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  line-height: var(--line-height-tight);
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+/* Visible, consistent focus for every interactive element. */
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip-link:focus-visible {
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: 100;
+  background: var(--color-surface);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-raised);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Designed empty state (Section 6.1): shown when no eligible projects
+   exist. Editorial and quiet, not an error. */
+#empty-state {
+  padding-block: var(--space-24);
+  text-align: center;
+  color: var(--color-ink-muted);
+  font-family: var(--font-display);
+  font-size: var(--text-size-lg);
+}

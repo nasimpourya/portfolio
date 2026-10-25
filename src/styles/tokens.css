@@ -1,0 +1,79 @@
+/*
+ * Design tokens (TASK-015) — light editorial minimalism.
+ * Every component styles itself from these tokens; no arbitrary
+ * repeated values in component stylesheets.
+ */
+
+:root {
+  /* Color: near-monochrome ink on paper, one quiet accent. */
+  --color-bg: #faf9f7;
+  --color-surface: #ffffff;
+  --color-ink: #1a1817;
+  --color-ink-muted: #6b6560;
+  --color-ink-faint: #a39d96;
+  --color-border: #e4e1dc;
+  --color-border-strong: #c9c4bd;
+  --color-accent: #2f5d50;
+  --color-accent-ink: #ffffff;
+
+  /* Typography: system editorial pairing, no webfont dependency. */
+  --font-body:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  --text-size-xs: 0.75rem;    /* 12px — labels, dates on markers */
+  --text-size-sm: 0.875rem;   /* 14px — captions, meta */
+  --text-size-md: 1rem;       /* 16px — body */
+  --text-size-lg: 1.25rem;    /* 20px — lead paragraphs */
+  --text-size-xl: 1.75rem;    /* 28px — section titles */
+  --text-size-2xl: 2.5rem;    /* 40px — page title */
+
+  --line-height-tight: 1.2;
+  --line-height-body: 1.6;
+  --letter-spacing-wide: 0.08em;
+
+  /* Spacing scale (4px base). */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* Borders and surfaces. */
+  --border-width: 1px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --shadow-subtle: 0 1px 2px rgb(26 24 23 / 0.06), 0 2px 8px rgb(26 24 23 / 0.05);
+  --shadow-raised: 0 2px 6px rgb(26 24 23 / 0.08), 0 8px 24px rgb(26 24 23 / 0.08);
+  --shadow-overlay: 0 8px 20px rgb(26 24 23 / 0.12), 0 24px 64px rgb(26 24 23 / 0.18);
+
+  /* Motion: durations and easings for the design system. Components must
+     wrap nonessential animation in @media (prefers-reduced-motion: no-preference). */
+  --transition-fast: 150ms;
+  --transition-base: 300ms;
+  --transition-slow: 600ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* Focus: visible focus ring for all interactive elements. */
+  --focus-ring: 2px solid var(--color-accent);
+  --focus-offset: 2px;
+
+  /* Layout. */
+  --page-max-width: 72rem;
+  --page-gutter: clamp(1rem, 4vw, 3rem);
+
+  /* Responsive breakpoints. Media queries cannot consume custom
+     properties, so these are the canonical values to use literally:
+     - mobile:  max-width 639px    (TASK-032 vertical timeline)
+     - tablet:  640px–1023px
+     - desktop: min-width 1024px   (horizontal timeline, TASK-018) */
+}

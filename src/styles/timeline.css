@@ -1,0 +1,442 @@
+/*
+ * Timeline (TASK-018): a horizontal rail with an alternating zigzag of
+ * editorial rectangular thumbnails — newest above the rail, next below,
+ * and so on — each joined to its node on the rail by a short stem, with
+ * the date label on the opposite side. Year ticks mark the calendar
+ * beats between projects of different years, and the rail ends in an
+ * arrowhead pointing toward the older end.
+ *
+ * Every item is a fixed symmetric box (marker + stem above and below
+ * the rail centerline), so nodes land on one Y for both sides and
+ * nothing reflows when images load — centerNewest's synchronous
+ * measurement stays exact. Mobile (≤639px) drops the alternation for a
+ * vertical rail on the left (TASK-032, Section 6.9) via the media query
+ * at the end of this file. The desktop container scrolls horizontally;
+ * the page itself never does.
+ */
+
+#timeline-region {
+  max-width: none;
+  padding-block: var(--space-8) var(--space-12);
+}
+
+/* The scroll container: viewport-width, scrolls overflowing content.
+   Block padding gives the hover shadows room: overflow-x: auto clips
+   the y axis at the padding edge. */
+.timeline-scroller {
+  overflow-x: auto;
+  /* Native scrollbar hidden deliberately (Section 6.2); drag and wheel
+     navigation arrive in TASK-020/021, keyboard access is via markers. */
+  scrollbar-width: none;
+  /* Drag scrolling (TASK-021): no text selection, no image ghost-drag. */
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  padding-block: var(--space-4);
+}
+
+.timeline-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.timeline-scroller.timeline--dragging {
+  cursor: grabbing;
+}
+
+/* Content-width list: as wide as its items, so the rail (::before)
+   spans the entire scrolled content, not just the viewport. Centered
+   within the scroller when the content is narrower. The inline gutter
+   padding draws the rail stub past the first and last markers. */
+.timeline {
+  --timeline-marker-size: 6rem;
+  --timeline-node-size: 0.625rem; /* the dot on the rail */
+  --timeline-stem: 0.75rem;       /* thumbnail edge → rail centerline */
+  --timeline-rail-y: calc(var(--timeline-marker-size) + var(--timeline-stem));
+  --timeline-box-height: calc(var(--timeline-rail-y) * 2);
+
+  display: flex;
+  gap: var(--space-12);
+  list-style: none;
+  margin: 0 auto;
+  padding: 0 var(--page-gutter);
+  width: max-content;
+  position: relative;
+}
+
+/* The rail: a single 1px rule through every node's center. */
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--timeline-rail-y) - var(--border-width) / 2);
+  height: var(--border-width);
+  background: var(--color-border-strong);
+}
+
+/* The arrowhead at the older (right) end: a rotated square whose
+   top-right corner points along the rail. */
+.timeline::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: var(--timeline-rail-y);
+  width: var(--space-2);
+  height: var(--space-2);
+  border-top: var(--border-width) solid var(--color-border-strong);
+  border-right: var(--border-width) solid var(--color-border-strong);
+  transform: translateY(-50%) rotate(45deg);
+}
+
+/* Empty timeline (Section 6.1): no rail or arrowhead without markers. */
+.timeline:not(:has(.timeline__item))::before,
+.timeline:not(:has(.timeline__item))::after {
+  display: none;
+}
+
+/* Fixed symmetric box: the node (::after) lands at the same Y whether
+   the thumbnail rides above or below the rail. */
+.timeline__item {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--timeline-marker-size);
+  height: var(--timeline-box-height);
+}
+
+/* The node on the rail: a hollow dot the rail passes through. */
+.timeline__item::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: var(--timeline-rail-y);
+  width: var(--timeline-node-size);
+  height: var(--timeline-node-size);
+  border-radius: 50%;
+  background: var(--color-bg);
+  border: var(--border-width) solid var(--color-border-strong);
+  transform: translate(-50%, -50%);
+  transition:
+    background-color var(--transition-fast) var(--ease-out),
+    border-color var(--transition-fast) var(--ease-out);
+}
+
+/* The stem: from the thumbnail's rail-side edge to the rail itself. */
+.timeline__item::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: var(--border-width);
+  height: var(--timeline-stem);
+  background: var(--color-border-strong);
+  transform: translateX(-50%);
+}
+
+.timeline__item[data-side="above"]::before {
+  top: var(--timeline-marker-size);
+}
+
+.timeline__item[data-side="below"]::before {
+  bottom: var(--timeline-marker-size);
+}
+
+/* The thumbnail box. Absolutely positioned so the button's box is
+   exactly the thumbnail's box — hover cards anchor it (TASK-022). */
+.timeline__marker {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: var(--timeline-marker-size);
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.timeline__item[data-side="above"] .timeline__marker {
+  top: 0;
+}
+
+.timeline__item[data-side="below"] .timeline__marker {
+  bottom: 0;
+}
+
+.timeline__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  transition:
+    border-color var(--transition-fast) var(--ease-out),
+    box-shadow var(--transition-fast) var(--ease-out);
+}
+
+/* The date sits across the rail from its thumbnail. Absolutely
+   positioned; nowrap overflow never affects the fixed box geometry. */
+.timeline__date {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: var(--text-size-xs);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+.timeline__item[data-side="above"] .timeline__date {
+  top: calc(var(--timeline-rail-y) + var(--space-2));
+}
+
+.timeline__item[data-side="below"] .timeline__date {
+  bottom: calc(var(--timeline-rail-y) + var(--space-2));
+}
+
+/* Year tick: a zero-width li living wholly inside the flex gap, so the
+   spacing between the surrounding markers doubles into a wider
+   editorial beat at each year boundary. Decorative only (the markers
+   carry the dates); never matched by `.timeline__item` selectors. */
+.timeline__year {
+  position: relative;
+  flex-shrink: 0;
+  width: 0;
+  height: var(--timeline-box-height);
+  pointer-events: none;
+}
+
+.timeline__year::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(var(--timeline-rail-y) - var(--space-2));
+  width: var(--border-width);
+  height: calc(var(--space-2) * 2 + var(--border-width));
+  background: var(--color-border-strong);
+  transform: translateX(-50%);
+}
+
+.timeline__year-label {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--timeline-rail-y) + var(--space-2));
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--text-size-xs);
+  color: var(--color-ink-faint);
+}
+
+/* Active marker (Section 6.4): node and stem fill with the accent. */
+.timeline__item[data-active]::after {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.timeline__item[data-active]::before {
+  background: var(--color-accent);
+}
+
+.timeline__item[data-active] .timeline__image {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-subtle);
+}
+
+.timeline__item[data-active] .timeline__date {
+  color: var(--color-accent);
+}
+
+/* Broken featured image: a quiet placeholder, never a broken-image
+   icon. On the button (inset: 0) so it covers exactly the image box on
+   both desktop and mobile layouts. */
+.timeline__item--image-failed .timeline__image {
+  visibility: hidden;
+}
+
+.timeline__item--image-failed .timeline__marker::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-sm);
+  border: var(--border-width) dashed var(--color-border-strong);
+  background: var(--color-surface);
+}
+
+/* Entrance (Section 7): staggered rise, transform/opacity only so
+   layout never moves. Motion-gated per the token contract. */
+@media (prefers-reduced-motion: no-preference) {
+  .timeline__item,
+  .timeline__year {
+    animation: timeline-enter 420ms var(--ease-out) backwards;
+    animation-delay: calc(var(--timeline-index, 0) * 45ms);
+  }
+}
+
+@keyframes timeline-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--space-2));
+  }
+}
+
+/* Hover/focus lift. Shadows and borders always apply; the transform is
+   motion-gated (Section 7). The transform lives on the image, not the
+   button, so the hover card's anchor box never moves. */
+.timeline__marker:hover .timeline__image,
+.timeline__marker:focus-visible .timeline__image {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-raised);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .timeline__image {
+    transition:
+      border-color var(--transition-fast) var(--ease-out),
+      box-shadow var(--transition-fast) var(--ease-out),
+      transform var(--transition-fast) var(--ease-out);
+  }
+
+  .timeline__marker:hover .timeline__image,
+  .timeline__marker:focus-visible .timeline__image {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+/* Detail mode (Section 6.4): the timeline pins sticky to the lower
+   viewport, so the composition shrinks — smaller thumbnails, shorter
+   stems, tighter region padding. These overrides live HERE, not in
+   detail.css: the build concatenates stylesheets alphabetically and
+   detail.css sorts before timeline.css (the same trap the mobile block
+   below documents). */
+body:not([data-mode="overview"]) .timeline {
+  --timeline-marker-size: 4rem;
+  --timeline-stem: 0.5rem;
+}
+
+body:not([data-mode="overview"]) #timeline-region {
+  padding-block: var(--space-4);
+}
+
+/* --- Mobile: vertical timeline (TASK-032, Section 6.9) ---
+   At the mobile breakpoint (≤639px, the canonical breakpoint in
+   tokens.css) the timeline stops scrolling horizontally and flows in
+   the document as a vertical list: no alternation — a rail down the
+   left, one node per project, a horizontal stem to a thumbnail + date
+   row (newest first, DOM order). Year ticks become small labels
+   between rows. Desktop and tablet keep the horizontal zigzag above
+   unchanged. These rules live here rather than in a separate
+   responsive.css because the build concatenates stylesheets
+   alphabetically — a responsive.css would sort before timeline.css and
+   lose the cascade. The [data-side] selectors match both side variants
+   at equal specificity with the desktop rules, so winning here is a
+   matter of source order — this block must stay last. */
+@media (max-width: 639.98px) {
+  #timeline-region {
+    padding-block: var(--space-6) var(--space-8);
+  }
+
+  /* No horizontal scroller on mobile: the list is document content.
+     Drag/wheel handlers simply never fire — nothing overflows. */
+  .timeline-scroller {
+    overflow: visible;
+    cursor: default;
+    padding-block: 0;
+  }
+
+  .timeline {
+    --timeline-marker-size: 4.5rem; /* 72px — still a generous touch target */
+    --timeline-indent: calc(
+      var(--timeline-node-size) + var(--timeline-stem) + var(--space-2)
+    );
+
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-6);
+    width: 100%;
+    padding: var(--space-2) var(--page-gutter);
+  }
+
+  /* The rail becomes vertical through the nodes' centers (each at its
+     row's left edge), trimmed to run between the first and last node. */
+  .timeline::before {
+    left: calc(var(--page-gutter) - var(--border-width) / 2);
+    right: auto;
+    top: calc(var(--space-2) + var(--timeline-marker-size) / 2 - var(--border-width) / 2);
+    bottom: calc(var(--space-2) + var(--timeline-marker-size) / 2 - var(--border-width) / 2);
+    width: var(--border-width);
+    height: auto;
+  }
+
+  .timeline::after {
+    display: none;
+  }
+
+  /* One side on mobile: a row of node ← stem ← thumbnail + date. The
+     row's height is the thumbnail (dates are shorter), so the rail
+     trim above lands on the node centers. */
+  .timeline__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    height: auto;
+    padding-left: var(--timeline-indent);
+  }
+
+  /* Node at the row's left edge, centered on the rail. */
+  .timeline__item::after {
+    left: 0;
+    top: 50%;
+  }
+
+  /* Horizontal stem: from the node's center to the thumbnail's left
+     edge (the node paints above it). */
+  .timeline__item[data-side]::before {
+    top: 50%;
+    bottom: auto;
+    left: 0;
+    width: var(--timeline-indent);
+    height: var(--border-width);
+    transform: translateY(-50%);
+  }
+
+  .timeline__item[data-side] .timeline__marker {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    width: var(--timeline-marker-size);
+    height: var(--timeline-marker-size);
+    flex-shrink: 0;
+  }
+
+  /* Date beside the thumbnail rather than across a rail: legible at
+     mobile width, with the marker row as the touch target. */
+  .timeline__item[data-side] .timeline__date {
+    position: static;
+    transform: none;
+    top: auto;
+    bottom: auto;
+  }
+
+  /* A year boundary is a short row: a tick across the rail and the
+     year beside it, aligned with the thumbnails. */
+  .timeline__year {
+    width: 100%;
+    height: var(--space-4);
+  }
+
+  .timeline__year::before {
+    left: 0;
+    top: 50%;
+    width: calc(var(--space-2) * 2 + var(--border-width));
+    height: var(--border-width);
+    transform: translate(-50%, -50%);
+  }
+
+  .timeline__year-label {
+    left: var(--timeline-indent);
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
